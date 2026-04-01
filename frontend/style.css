@@ -1,0 +1,254 @@
+/* Base */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+        sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem 2.5rem;
+    background-color: #f4f4f5;
+    color: #18181b;
+    line-height: 1.55;
+}
+
+/* Header */
+header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #d4d4d8;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+}
+
+/* Main layout */
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+main section h2 {
+    margin: 0 0 1rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+/* Form section */
+section[aria-labelledby="application-form-heading"] {
+    padding: 1.25rem 1.25rem 1.5rem;
+    background-color: #fff;
+    border: 1px solid #e4e4e7;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+/* Form */
+#application-form > div {
+    margin-bottom: 1rem;
+}
+
+#application-form label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #475569;
+}
+
+#application-form input[type="text"],
+#application-form input[type="date"],
+#application-form select,
+#application-form textarea {
+    width: 100%;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font: inherit;
+    background-color: #fff;
+    color: #0f172a;
+}
+
+#application-form textarea {
+    resize: vertical;
+    min-height: 4.5rem;
+}
+
+#application-form input:focus,
+#application-form select:focus,
+#application-form textarea:focus {
+    outline: 2px solid #94a3b8;
+    outline-offset: 1px;
+    border-color: #94a3b8;
+}
+
+#submit-application {
+    margin-top: 0.5rem;
+    padding: 0.6rem 1.25rem;
+    border: none;
+    border-radius: 6px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #0d9488;
+    color: #fff;
+}
+
+#submit-application:hover {
+    background-color: #0f766e;
+}
+
+#submit-application:focus-visible {
+    outline: 2px solid #0f766e;
+    outline-offset: 2px;
+}
+
+/* Filter */
+section[aria-labelledby="filter-heading"] {
+    padding: 1rem 1.25rem;
+    background-color: #fff;
+    border: 1px solid #e4e4e7;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+section[aria-labelledby="filter-heading"] label {
+    display: inline-block;
+    margin-right: 0.75rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #475569;
+}
+
+#status-filter {
+    min-width: 12rem;
+    padding: 0.45rem 0.65rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font: inherit;
+    background-color: #fafafa;
+    color: #0f172a;
+}
+
+#status-filter:focus {
+    outline: 2px solid #94a3b8;
+    outline-offset: 1px;
+}
+
+/* Table */
+#applications-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    border: 1px solid #e4e4e7;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+#applications-table thead th {
+    text-align: left;
+    padding: 0.75rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #f8fafc;
+    background-color: #334155;
+    border-bottom: 1px solid #1e293b;
+}
+
+#applications-table tbody td {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #e4e4e7;
+    vertical-align: middle;
+}
+
+#applications-table tbody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+#applications-table tbody tr:nth-child(odd) {
+    background-color: #fff;
+}
+
+#applications-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Table action buttons (Edit = first, Delete = second) */
+#applications-table td button {
+    display: inline-block;
+    margin-right: 0.5rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+#applications-table td button:last-child {
+    margin-right: 0;
+}
+
+#applications-table td button:first-of-type {
+    background-color: #2563eb;
+    color: #fff;
+    border-color: #1d4ed8;
+}
+
+#applications-table td button:first-of-type:hover {
+    background-color: #1d4ed8;
+}
+
+#applications-table td button:last-of-type {
+    background-color: #dc2626;
+    color: #fff;
+    border-color: #b91c1c;
+}
+
+#applications-table td button:last-of-type:hover {
+    background-color: #b91c1c;
+}
+
+#applications-table td button:focus-visible {
+    outline: 2px solid #64748b;
+    outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+    body {
+        padding: 1rem 1rem 2rem;
+    }
+
+    header h1 {
+        font-size: 1.4rem;
+    }
+
+    main {
+        gap: 1.5rem;
+    }
+
+    #applications-table {
+        font-size: 0.85rem;
+    }
+
+    #applications-table thead th,
+    #applications-table tbody td {
+        padding: 0.6rem 0.65rem;
+    }
+}

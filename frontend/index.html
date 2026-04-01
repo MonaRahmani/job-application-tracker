@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Job Application Tracker</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <header>
+        <h1>Job Application Tracker</h1>
+    </header>
+
+    <main>
+        <section aria-labelledby="application-form-heading">
+            <h2 id="application-form-heading">Add New Application</h2>
+            <form id="application-form">
+                <div>
+                    <label for="company">Company</label>
+                    <input type="text" id="company" name="company" required />
+                </div>
+
+                <div>
+                    <label for="position">Position</label>
+                    <input type="text" id="position" name="position" required />
+                </div>
+
+                <div>
+                    <label for="date-applied">Date Applied</label>
+                    <input type="date" id="date-applied" name="date_applied" />
+                </div>
+
+                <div>
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                        <option value="Applied">Applied</option>
+                        <option value="Interview">Interview</option>
+                        <option value="Offer">Offer</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" name="notes" rows="3"></textarea>
+                </div>
+
+                <button type="submit" id="submit-application">Add Application</button>
+            </form>
+        </section>
+
+        <section aria-labelledby="filter-heading">
+            <h2 id="filter-heading">Filters</h2>
+            <label for="status-filter">Filter by Status:</label>
+            <select id="status-filter" name="status-filter">
+                <option value="All">All</option>
+                <option value="Applied">Applied</option>
+                <option value="Interview">Interview</option>
+                <option value="Offer">Offer</option>
+                <option value="Rejected">Rejected</option>
+            </select>
+        </section>
+
+        <section aria-labelledby="table-heading">
+            <h2 id="table-heading">Applications</h2>
+            <table id="applications-table">
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Position</th>
+                        <th>Date Applied</th>
+                        <th>Status</th>
+                        <th>Notes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="applications-body"></tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
