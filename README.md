@@ -27,7 +27,7 @@ I built this project from a personal need during my job search to stay organized
 
 1. Install dependencies
 2. Run backend server
-3. Open frontend in browser
+3. Open the app in your browser
 
 ```bash
 # 1) Install dependencies
@@ -37,18 +37,17 @@ python3 -m pip install -r ../requirements.txt
 # 2) Run backend server
 python3 app.py
 
-# 3) Open frontend in browser
-# In a new terminal:
-cd ../frontend
-open index.html
+# 3) Visit http://127.0.0.1:5000
 ```
+
+Set a private `SECRET_KEY` environment variable before deploying. The local fallback
+is intended for development only.
 
 ## Project Structure
 
 ```text
 job-tracker/
 ├── README.md
-├── requirements.txt
 ├── backend/
 │   ├── app.py
 │   ├── database.py
