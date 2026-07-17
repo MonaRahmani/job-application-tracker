@@ -37,6 +37,17 @@
         </section>
 
         <div id="tracker-section" hidden>
+            <section id="profile-section" aria-labelledby="profile-heading">
+                <h2 id="profile-heading">Resume Profile</h2>
+                <p class="privacy-note">Your resume text and each job description are sent to OpenAI only when you request a match.</p>
+                <p id="resume-status">No resume uploaded yet.</p>
+                <form id="resume-form">
+                    <label for="resume-file">Upload PDF or TXT resume (max 5 MB)</label>
+                    <input type="file" id="resume-file" accept=".pdf,.txt,application/pdf,text/plain" required />
+                    <button type="submit">Upload Resume</button>
+                </form>
+            </section>
+
             <section aria-labelledby="application-form-heading">
                 <h2 id="application-form-heading">Add New Application</h2>
                 <form id="application-form">
@@ -66,13 +77,47 @@
                 <h2 id="table-heading">Applications</h2>
                 <div class="table-wrapper">
                     <table id="applications-table">
-                        <thead><tr><th>Company</th><th>Position</th><th>Date Applied</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead>
+                        <thead><tr><th>Company</th><th>Position</th><th>Date Applied</th><th>Status</th><th>Notes</th><th>Resume Match</th><th>Actions</th></tr></thead>
                         <tbody id="applications-body"></tbody>
                     </table>
                 </div>
             </section>
         </div>
     </main>
+
+    <dialog id="match-modal" aria-labelledby="match-modal-title">
+        <div class="modal-header">
+            <div>
+                <p class="modal-eyebrow">Resume match</p>
+                <h2 id="match-modal-title">Application</h2>
+            </div>
+            <button type="button" id="close-match-modal" class="modal-close" aria-label="Close resume matcher">×</button>
+        </div>
+        <form id="match-form">
+            <label for="modal-job-description">Job Description</label>
+            <textarea id="modal-job-description" rows="12" placeholder="Paste the complete job description" required></textarea>
+            <button type="submit" id="run-match-button">Match Resume</button>
+            <p id="modal-match-status" role="status" aria-live="polite"></p>
+        </form>
+        <section class="match-results" aria-labelledby="match-results-heading">
+            <div class="score-panel">
+                <span id="match-results-heading">Match score</span>
+                <strong id="modal-match-score">Not matched yet</strong>
+            </div>
+            <div class="keyword-group">
+                <h3>Matched keywords</h3>
+                <div id="modal-matched-keywords" class="keyword-list"></div>
+            </div>
+            <div class="keyword-group">
+                <h3>Missing keywords</h3>
+                <div id="modal-missing-keywords" class="keyword-list"></div>
+            </div>
+            <div>
+                <h3>Suggested resume tweaks</h3>
+                <ul id="modal-match-suggestions" class="match-suggestions"></ul>
+            </div>
+        </section>
+    </dialog>
 
     <script src="app.js"></script>
 </body>

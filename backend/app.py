@@ -1,16 +1,24 @@
 from datetime import datetime
 from functools import wraps
+from io import BytesIO
+import json
 import os
 from pathlib import Path
 
 from flask import Flask, jsonify, request, session
 from flask_cors import CORS
+from dotenv import load_dotenv
 from sqlalchemy import inspect, text
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
 
 from database import db
 
 from models import Application, User
+from matcher import InvalidResumeError, MatchServiceError, match_resume
+
+
+load_dotenv(Path(__file__).with_name(".env"))
 
 
 def create_app(test_config=None):
@@ -29,6 +37,7 @@ def create_app(test_config=None):
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
+        MAX_CONTENT_LENGTH=5 * 1024 * 1024,
     )
     if test_config:
         app.config.update(test_config)
@@ -42,26 +51,79 @@ def create_app(test_config=None):
 
     with app.app_context():
         User.__table__.create(db.engine, checkfirst=True)
-        _add_owner_column_to_existing_database()
+        _migrate_existing_database()
         db.create_all()
 
     register_routes(app)
     return app
 
 
-def _add_owner_column_to_existing_database():
-    """Upgrade the pre-auth SQLite table without deleting existing data."""
+def _add_columns(table, columns):
+    existing = {column["name"] for column in inspect(db.engine).get_columns(table)}
+    for name, definition in columns.items():
+        if name not in existing:
+            db.session.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {definition}"))
+
+
+def _migrate_existing_database():
+    """Upgrade older SQLite databases without deleting user data."""
+    _add_columns(
+        "users",
+        {
+            "resume_filename": "VARCHAR(255)",
+            "resume_text": "TEXT",
+            "resume_uploaded_at": "DATETIME",
+        },
+    )
     if not inspect(db.engine).has_table("applications"):
+        db.session.commit()
         return
-    columns = {column["name"] for column in inspect(db.engine).get_columns("applications")}
-    if "owner_id" not in columns:
-        db.session.execute(
-            text("ALTER TABLE applications ADD COLUMN owner_id INTEGER REFERENCES users(id)")
-        )
+    existing = {column["name"] for column in inspect(db.engine).get_columns("applications")}
+    _add_columns(
+        "applications",
+        {
+            "owner_id": "INTEGER REFERENCES users(id)",
+            "job_description": "TEXT",
+            "match_score": "INTEGER",
+            "match_suggestions": "TEXT",
+            "matched_keywords": "TEXT",
+            "missing_keywords": "TEXT",
+            "matched_at": "DATETIME",
+        },
+    )
+    if "owner_id" not in existing:
         db.session.execute(
             text("CREATE INDEX IF NOT EXISTS ix_applications_owner_id ON applications (owner_id)")
         )
-        db.session.commit()
+    db.session.commit()
+
+
+def _extract_resume(file):
+    filename = secure_filename(file.filename or "")
+    extension = Path(filename).suffix.lower()
+    data = file.read()
+    if not data:
+        raise ValueError("The resume file is empty")
+    if extension == ".txt":
+        try:
+            content = data.decode("utf-8")
+        except UnicodeDecodeError as error:
+            raise ValueError("The text resume must use UTF-8 encoding") from error
+    elif extension == ".pdf":
+        try:
+            from pypdf import PdfReader
+
+            content = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(data)).pages)
+        except ImportError as error:
+            raise ValueError("PDF support is not installed; run pip install -r requirements.txt") from error
+        except Exception as error:
+            raise ValueError("The PDF could not be read") from error
+    else:
+        raise ValueError("Resume must be a PDF or UTF-8 text file")
+    content = content.strip()
+    if len(content) < 50:
+        raise ValueError("The resume does not contain enough readable text")
+    return filename, content
 
 
 def login_required(view):
@@ -140,6 +202,30 @@ def register_routes(app):
             return jsonify({"error": "Authentication required"}), 401
         return jsonify({"user": user.to_dict()})
 
+    @app.get("/api/profile")
+    @login_required
+    def get_profile():
+        user = db.session.get(User, session["user_id"])
+        return jsonify({"user": user.to_dict()})
+
+    @app.post("/api/profile/resume")
+    @login_required
+    def upload_resume():
+        file = request.files.get("resume")
+        if file is None:
+            return jsonify({"error": "Choose a resume file"}), 400
+        try:
+            filename, content = _extract_resume(file)
+        except MatchServiceError as error:
+            status = 503 if "not configured" in str(error) else 502
+            return jsonify({"error": str(error)}), status
+        user = db.session.get(User, session["user_id"])
+        user.resume_filename = filename
+        user.resume_text = content
+        user.resume_uploaded_at = datetime.utcnow()
+        db.session.commit()
+        return jsonify({"user": user.to_dict()})
+
     @app.get("/api/applications")
     @login_required
     def get_applications():
@@ -193,6 +279,7 @@ def register_routes(app):
                 date_applied=date_applied,
                 status=status.strip() if isinstance(status, str) else status,
                 notes=None if notes == "" else notes,
+                job_description=data.get("job_description") or None,
             )
             db.session.add(application)
             db.session.commit()
@@ -241,11 +328,51 @@ def register_routes(app):
             if "notes" in data:
                 application.notes = None if data["notes"] == "" else data["notes"]
 
+            if "job_description" in data:
+                application.job_description = data["job_description"] or None
+                application.match_score = None
+                application.match_suggestions = None
+                application.matched_keywords = None
+                application.missing_keywords = None
+                application.matched_at = None
+
             db.session.commit()
             return jsonify(application.to_dict())
         except Exception as error:
             db.session.rollback()
             return jsonify({"error": str(error)}), 500
+
+    @app.post("/api/applications/<int:application_id>/match")
+    @login_required
+    def match_application(application_id):
+        application = Application.query.filter_by(
+            id=application_id, owner_id=session["user_id"]
+        ).first()
+        if application is None:
+            return jsonify({"error": "Application not found"}), 404
+        user = db.session.get(User, session["user_id"])
+        if not user.resume_text:
+            return jsonify({"error": "Upload a resume to your profile first"}), 400
+        data = request.get_json(silent=True) or {}
+        job_description = data.get("job_description", application.job_description)
+        if not isinstance(job_description, str) or not job_description.strip():
+            return jsonify({"error": "Paste a job description first"}), 400
+        try:
+            result = match_resume(user.resume_text, job_description)
+        except InvalidResumeError as error:
+            return jsonify({"error": f"This file does not look like a resume: {error}"}), 422
+        except MatchServiceError as error:
+            status = 503 if "not configured" in str(error) else 502
+            return jsonify({"error": str(error)}), status
+
+        application.job_description = job_description.strip()
+        application.match_score = result["score"]
+        application.match_suggestions = json.dumps(result["suggestions"])
+        application.matched_keywords = json.dumps(result["matched_keywords"])
+        application.missing_keywords = json.dumps(result["missing_keywords"])
+        application.matched_at = datetime.utcnow()
+        db.session.commit()
+        return jsonify(application.to_dict())
 
     @app.delete("/api/applications/<int:application_id>")
     @login_required

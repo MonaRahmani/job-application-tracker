@@ -1,9 +1,12 @@
 import tempfile
 import unittest
+from io import BytesIO
+from unittest.mock import patch
 from pathlib import Path
 
 from app import create_app
 from database import db
+from matcher import InvalidResumeError
 
 
 class AuthenticationTests(unittest.TestCase):
@@ -77,6 +80,96 @@ class AuthenticationTests(unittest.TestCase):
             404,
         )
         self.assertEqual(first_client.get("/api/applications").get_json()[0]["status"], "Applied")
+
+    def test_resume_upload_and_job_description_match(self):
+        client = self.app.test_client()
+        self.register(client, "matcher@example.com")
+        resume = (
+            b"Software engineer with Python Flask SQL REST API testing and cloud "
+            b"experience. Improved service performance by 30 percent."
+        )
+        uploaded = client.post(
+            "/api/profile/resume",
+            data={"resume": (BytesIO(resume), "resume.txt")},
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(uploaded.status_code, 200)
+        self.assertEqual(uploaded.get_json()["user"]["resume_filename"], "resume.txt")
+
+        application = client.post(
+            "/api/applications",
+            json={"company": "Example", "position": "Engineer", "status": "Applied"},
+        ).get_json()
+        with patch(
+            "app.match_resume",
+            return_value={
+                "score": 78,
+                "suggestions": ["Emphasize API outcomes.", "Add cloud scale if accurate."],
+                "matched_keywords": ["python", "flask", "sql"],
+                "missing_keywords": ["kubernetes"],
+            },
+        ):
+            matched = client.post(
+                f"/api/applications/{application['id']}/match",
+                json={
+                    "job_description": (
+                        "Build Python and Flask REST services with SQL, Docker, Kubernetes, "
+                        "automated testing, monitoring, and cloud deployment."
+                    )
+                },
+            )
+        self.assertEqual(matched.status_code, 200)
+        result = matched.get_json()
+        self.assertGreaterEqual(result["match_score"], 0)
+        self.assertLessEqual(result["match_score"], 100)
+        self.assertTrue(result["match_suggestions"])
+        self.assertIn("python", result["matched_keywords"])
+
+    def test_match_cannot_use_another_users_application(self):
+        owner = self.app.test_client()
+        other = self.app.test_client()
+        self.register(owner, "owner@example.com")
+        self.register(other, "other@example.com")
+        application = owner.post(
+            "/api/applications",
+            json={"company": "Private", "position": "Analyst", "status": "Applied"},
+        ).get_json()
+        response = other.post(
+            f"/api/applications/{application['id']}/match",
+            json={"job_description": "Detailed private job description with analytics and reporting"},
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_non_resume_document_is_rejected_before_match_is_saved(self):
+        client = self.app.test_client()
+        self.register(client, "curriculum@example.com")
+        document = (
+            b"Course curriculum weekly schedule learning objectives required readings "
+            b"assignments grading policy lectures and classroom activities."
+        )
+        client.post(
+            "/api/profile/resume",
+            data={"resume": (BytesIO(document), "curriculum.txt")},
+            content_type="multipart/form-data",
+        )
+        application = client.post(
+            "/api/applications",
+            json={"company": "Example", "position": "Engineer", "status": "Applied"},
+        ).get_json()
+
+        with patch(
+            "app.match_resume",
+            side_effect=InvalidResumeError("It appears to be a course curriculum."),
+        ):
+            response = client.post(
+                f"/api/applications/{application['id']}/match",
+                json={"job_description": "Build production software and collaborate with engineers."},
+            )
+
+        self.assertEqual(response.status_code, 422)
+        self.assertIn("does not look like a resume", response.get_json()["error"])
+        saved = client.get(f"/api/applications/{application['id']}").get_json()
+        self.assertIsNone(saved["match_score"])
 
 
 if __name__ == "__main__":

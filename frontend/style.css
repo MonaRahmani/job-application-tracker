@@ -129,6 +129,38 @@ main section h2 {
     gap: 2rem;
 }
 
+#profile-section {
+    padding: 1.25rem;
+    background: #fff;
+    border: 1px solid #e4e4e7;
+    border-radius: 8px;
+}
+
+#resume-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+#resume-form label {
+    width: 100%;
+    font-weight: 500;
+}
+
+#resume-form button,
+.open-match-button,
+#run-match-button {
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    border-radius: 6px;
+    background: #0d9488;
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
 .table-wrapper {
     overflow-x: auto;
 }
@@ -264,6 +296,22 @@ section[aria-labelledby="filter-heading"] label {
     vertical-align: middle;
 }
 
+.match-cell {
+    min-width: 9rem;
+}
+
+.match-score {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #0f766e;
+}
+
+.match-suggestions {
+    margin: 0.75rem 0 0;
+    padding-left: 1.1rem;
+    color: #475569;
+}
+
 #applications-table tbody tr:nth-child(even) {
     background-color: #fafafa;
 }
@@ -293,29 +341,160 @@ section[aria-labelledby="filter-heading"] label {
     margin-right: 0;
 }
 
-#applications-table td button:first-of-type {
+.edit-status-button {
     background-color: #2563eb;
     color: #fff;
     border-color: #1d4ed8;
 }
 
-#applications-table td button:first-of-type:hover {
+.edit-status-button:hover {
     background-color: #1d4ed8;
 }
 
-#applications-table td button:last-of-type {
+.delete-button {
     background-color: #dc2626;
     color: #fff;
     border-color: #b91c1c;
 }
 
-#applications-table td button:last-of-type:hover {
+.delete-button:hover {
     background-color: #b91c1c;
 }
 
 #applications-table td button:focus-visible {
     outline: 2px solid #64748b;
     outline-offset: 2px;
+}
+
+/* Resume match modal */
+#match-modal {
+    width: min(92vw, 760px);
+    max-height: 90vh;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    color: #18181b;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.3);
+}
+
+#match-modal::backdrop {
+    background: rgba(15, 23, 42, 0.62);
+    backdrop-filter: blur(2px);
+}
+
+.modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e4e4e7;
+}
+
+.modal-header h2,
+.modal-header p {
+    margin: 0;
+}
+
+.modal-eyebrow {
+    color: #0f766e;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.modal-close {
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: 50%;
+    background: #f1f5f9;
+    color: #334155;
+    font-size: 1.4rem;
+    cursor: pointer;
+}
+
+#match-form,
+.match-results {
+    padding: 1.25rem 1.5rem;
+}
+
+#match-form label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+}
+
+#modal-job-description {
+    width: 100%;
+    min-height: 13rem;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font: inherit;
+    resize: vertical;
+}
+
+#run-match-button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+#modal-match-status {
+    min-height: 1.5rem;
+    margin: 0.5rem 0 0;
+    color: #475569;
+}
+
+.match-results {
+    display: grid;
+    gap: 1rem;
+    padding-top: 0;
+}
+
+.score-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-radius: 8px;
+    background: #ecfdf5;
+    color: #065f46;
+}
+
+#modal-match-score {
+    font-size: 1.6rem;
+}
+
+.match-results h3 {
+    margin: 0 0 0.5rem;
+    font-size: 0.95rem;
+}
+
+.keyword-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.keyword-chip {
+    padding: 0.25rem 0.55rem;
+    border-radius: 999px;
+    background: #e2e8f0;
+    color: #334155;
+    font-size: 0.8rem;
+}
+
+.keyword-chip.matched {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.keyword-chip.missing {
+    background: #fef3c7;
+    color: #92400e;
 }
 
 @media (max-width: 640px) {

@@ -22,6 +22,9 @@ I built this project from a personal need during my job search to stay organized
 - Update existing applications
 - Delete applications
 - Filter applications by status
+- Private user accounts with session-based authentication
+- Resume profile uploads (PDF or TXT)
+- Per-application resume/job-description match scores and suggestions
 
 ## How to Run
 
@@ -32,9 +35,11 @@ I built this project from a personal need during my job search to stay organized
 ```bash
 # 1) Install dependencies
 cd backend
-python3 -m pip install -r ../requirements.txt
+python3 -m pip install -r requirements.txt
 
-# 2) Run backend server
+# 2) Configure OpenAI and run the backend server
+export OPENAI_API_KEY="your-api-key"
+# Optional: export OPENAI_MATCH_MODEL="gpt-5.6-luna"
 python3 app.py
 
 # 3) Visit http://127.0.0.1:5000
@@ -42,6 +47,9 @@ python3 app.py
 
 Set a private `SECRET_KEY` environment variable before deploying. The local fallback
 is intended for development only.
+
+Resume matching uses OpenAI's Responses API. The API key is read only by the backend
+from `OPENAI_API_KEY` and is never sent to the browser.
 
 ## Project Structure
 
